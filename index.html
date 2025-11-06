@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Will you be my girlfriend?</title>
+
+  <!-- Beautiful script + modern sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --red1: #ff1a4b;
+      --red2: #ff3366;
+      --bg: #060606;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(255,20,60,0.06), transparent),
+                  radial-gradient(900px 400px at 90% 90%, rgba(255,10,40,0.04), transparent),
+                  var(--bg);
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+    }
+
+    /* floating hearts (background) */
+    .heart {
+      position:absolute;
+      bottom:-20px;
+      font-size:18px;
+      opacity:0.75;
+      filter: blur(0.2px);
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.9); opacity:0.9; }
+      100% { transform: translateY(-120vh) scale(1.4); opacity:0; }
+    }
+
+    /* Center column */
+    .center {
+      z-index: 5;
+      text-align:center;
+      pointer-events: auto;
+    }
+
+    /* I Love You — fancy script and per-letter animation */
+    #loveText{
+      font-family: "Great Vibes", cursive;
+      font-size: 4.6rem;
+      line-height:1;
+      color: var(--red1);
+      letter-spacing: 1px;
+      text-shadow:
+        0 0 6px rgba(255,20,60,0.9),
+        0 0 18px rgba(255,50,100,0.6),
+        0 8px 30px rgba(0,0,0,0.6);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      display:inline-block;
+    }
+
+    /* each character animation */
+    .letter {
+      display:inline-block;
+      opacity:0;
+      transform: translateY(30px) scale(0.95) rotate(-2deg);
+      animation: letterIn 600ms cubic-bezier(.2,.9,.3,1) forwards;
+    }
+    @keyframes letterIn {
+      to { opacity:1; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+
+    /* small hint text */
+    #hint {
+      font-size: 0.95rem;
+      color: rgba(255,160,180,0.95);
+      margin-top: 10px;
+      text-shadow: 0 0 6px rgba(255,50,100,0.12);
+      opacity:0;
+      transform: translateY(6px);
+      transition: all 400ms ease;
+    }
+    #hint.visible { opacity:1; transform: translateY(0); }
+
+    /* Popup - centered and precise */
+    #popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.0);
+      transition: transform 430ms cubic-bezier(.2,.95,.2,1);
+      z-index: 999;
+      pointer-events: none;
+      width: min(520px, 92vw);
+      max-width: 92vw;
+      box-sizing: border-box;
+    }
+
+    #popup.show {
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+
+    .popup-card{
+      background: linear-gradient(180deg, rgba(18,18,18,0.98), rgba(12,12,12,0.98));
+      border-radius: 18px;
+      padding: 28px;
+      border: 1px solid rgba(255,40,80,0.12);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(255,20,60,0.06) inset;
+      color: #fff;
+      position: relative;
+      overflow: visible;
+    }
+
+    .popup-card h2{
+      margin:0 0 18px 0;
+      font-size:1.6rem;
+      color: #ffd6e2;
+      text-shadow: 0 0 10px rgba(255,20,60,0.12);
+      font-weight:600;
+    }
+
+    /* Button area: fixed height area so moving is smooth & contained */
+    .btn-area{
+      position: relative;
+      width:100%;
+      height:110px; /* room to dodge */
+      display:block;
+      margin-top: 6px;
+    }
+
+    .btn{
+      position: absolute;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.05rem;
+      cursor: pointer;
+      user-select: none;
+      transition: left 220ms ease, top 220ms ease, transform 160ms ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+
+    .yes{
+      background: linear-gradient(180deg, var(--red1), var(--red2));
+      color: white;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      box-shadow: 0 8px 26px rgba(255,20,60,0.25);
+    }
+    .yes:active { transform: translate(-50%, -50%) scale(0.98); }
+
+    .no{
+      background: #8a8a8a;
+      color: white;
+      top: 50%;
+      left: calc(50% + 110px); /* fallback initial position */
+      transform: translate(-50%, -50%);
+    }
+
+    /* Final success message */
+    .final {
+      text-align:center;
+      padding: 34px;
+      font-size: 1.5rem;
+      color:#ffdfe6;
+      text-shadow: 0 0 12px rgba(255,60,80,0.12);
+    }
+
+    /* smaller screens adjustments */
+    @media (max-width:420px){
+      #loveText { font-size: 3.2rem; }
+      .btn-area{ height:140px; }
+      .no{ left: calc(50% + 80px); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="center">
+    <div id="loveText">❤️I Love you❤️</div>
+    <div id="hint">(click on it)</div>
+  </div>
+
+  <!-- popup -->
+  <div id="popup" aria-hidden="true">
+    <div class="popup-card" role="dialog" aria-modal="true" aria-label="Proposal">
+      <h2>Will you be my girlfriend?</h2>
+
+      <div class="btn-area" id="btnArea">
+        <button class="btn yes" id="yesBtn">Yes ❤️</button>
+        <button class="btn no" id="noBtn">No ❌</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- floating hearts background -->
+  <script>
+    // small floating hearts in background
+    function createHeartBg(){
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = '❤';
+      const size = Math.random() * 18 + 12;
+      h.style.fontSize = size + 'px';
+      h.style.left = (Math.random() * 100) + 'vw';
+      h.style.animationDuration = (Math.random() * 4 + 5) + 's';
+      h.style.opacity = (Math.random()*0.5 + 0.4);
+      h.style.transform = 'translateY(0) rotate('+ (Math.random()*40 - 20) +'deg)';
+      document.body.appendChild(h);
+      setTimeout(()=> h.remove(), 9000);
+    }
+    setInterval(createHeartBg, 520);
+
+    // LETTER-BY-LETTER: wrap each char in span with staggered delay
+    const loveText = document.getElementById('loveText');
+    const hint = document.getElementById('hint');
+    function splitAndAnimate(textEl){
+      const raw = textEl.textContent.trim();
+      textEl.innerHTML = '';
+      [...raw].forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 'letter';
+        span.textContent = (ch === ' ') ? '\u00A0' : ch;
+        span.style.animationDelay = (i * 0.08) + 's';
+        textEl.appendChild(span);
+      });
+      // show hint after full reveal
+      const totalDelay = raw.length * 0.08 + 0.45;
+      setTimeout(()=> hint.classList.add('visible'), totalDelay*1000);
+    }
+
+    // initial split + animate
+    splitAndAnimate(loveText);
+
+    // small burst of hearts around text when clicked
+    function burstHeartsAt(el, count = 8){
+      const rect = el.getBoundingClientRect();
+      for(let i=0;i<count;i++){
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.textContent = '❤';
+        const size = Math.random()*16 + 12;
+        h.style.fontSize = size + 'px';
+        h.style.left = (rect.left + rect.width * Math.random()) + 'px';
+        h.style.top = (rect.top + rect.height * Math.random()) + 'px';
+        h.style.animationDuration = (Math.random()*1 + 1) + 's';
+        h.style.opacity = 1;
+        h.style.transform = 'translateY(0) scale(1)';
+        h.style.transition = 'transform 800ms ease, opacity 800ms ease';
+        document.body.appendChild(h);
+        // animate upwards then remove
+        requestAnimationFrame(()=> {
+          h.style.transform = 'translateY(-120vh) scale(1.6)';
+          h.style.opacity = 0;
+        });
+        setTimeout(()=> h.remove(), 1200);
+      }
+    }
+
+    // POPUP handling
+    const popup = document.getElementById('popup');
+    const btnArea = document.getElementById('btnArea');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    // place buttons inside btn-area so they are properly aligned & contained
+    function placeInitialButtons(){
+      // ensure btn-area has been laid out
+      const areaW = btnArea.clientWidth;
+      const areaH = btnArea.clientHeight;
+      const yesW = yesBtn.offsetWidth;
+      const yesH = yesBtn.offsetHeight;
+      const noW = noBtn.offsetWidth;
+      const noH = noBtn.offsetHeight;
+      // center yes
+      yesBtn.style.left = (areaW/2 - yesW/2) + 'px';
+      yesBtn.style.top  = (areaH/2 - yesH/2) + 'px';
+      // place no to the right if there is space otherwise below
+      const gap = 24;
+      const rightX = areaW/2 + yesW/2 + gap;
+      if (rightX + noW <= areaW){
+        noBtn.style.left = rightX + 'px';
+        noBtn.style.top  = (areaH/2 - noH/2) + 'px';
+      } else {
+        noBtn.style.left = (areaW/2 - noW/2) + 'px';
+        noBtn.style.top  = (areaH/2 + yesH/2 + gap) + 'px';
+      }
+    }
+
+    // compute new random position for no button constrained to btn-area
+    function moveNoBtnRandom(){
+      const areaW = btnArea.clientWidth;
+      const areaH = btnArea.clientHeight;
+      const w = noBtn.offsetWidth;
+      const h = noBtn.offsetHeight;
+
+      // safe margins so button doesn't touch edges
+      const margin = 8;
+      const maxX = Math.max(0, areaW - w - margin*2);
+      const maxY = Math.max(0, areaH - h - margin*2);
+
+      const x = Math.random() * maxX + margin;
+      const y = Math.random() * maxY + margin;
+
+      noBtn.style.left = x + 'px';
+      noBtn.style.top  = y + 'px';
+      // tiny scale pop for fun
+      noBtn.style.transform = 'translate(0,0) scale(1.03)';
+      setTimeout(()=> { noBtn.style.transform = 'translate(0,0) scale(1)'; }, 160);
+    }
+
+    // show popup when clicking the big text
+    loveText.addEventListener('click', () => {
+      // little burst + reveal popup
+      burstHeartsAt(loveText, 12);
+      popup.classList.add('show');
+      popup.setAttribute('aria-hidden','false');
+      // place buttons after popup becomes visible (let layout happen)
+      setTimeout(() => placeInitialButtons(), 70);
+      // in case layout is slower on some devices
+      setTimeout(() => placeInitialButtons(), 240);
+    });
+
+    // No button moves on mouseenter and on touchstart or click (to handle mobile)
+    noBtn.addEventListener('mouseenter', moveNoBtnRandom);
+    noBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      moveNoBtnRandom();
+    });
+    noBtn.addEventListener('touchstart', (e)=>{
+      e.preventDefault();
+      moveNoBtnRandom();
+    }, {passive:false});
+
+    // Re-position buttons if window resizes
+    window.addEventListener('resize', ()=> {
+      if (popup.classList.contains('show')){
+        placeInitialButtons();
+      }
+    });
+
+    // Yes button action -> show final message with small animation
+    yesBtn.addEventListener('click', ()=> {
+      const card = popup.querySelector('.popup-card');
+      card.innerHTML = '<div class="final">Yay! ❤️ You made me the happiest. Thank you!</div>';
+      // small heart rain for celebration
+      for(let i=0;i<18;i++) setTimeout(()=> createHeartBg(), i*80);
+    });
+
+    // Prevent accidental text selection on long-press
+    document.addEventListener('selectstart', e => e.preventDefault());
+  </script>
+</body>
+</html>
